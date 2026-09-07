@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Amelia &amp; James — Save the Date</title>
+<meta name="description" content="Amelia &amp; James are getting married — save the date.">
+
+<!--
+  ====================================================================
+  HOW TO EDIT THIS INVITATION
+  Scroll to the "EDIT ME" section inside the <script> tag near the
+  bottom of this file. Every piece of wording, the date, the venues
+  and the schedule live in one place there — change the text, save,
+  and re-publish. No other part of the file needs to be touched.
+  ====================================================================
+-->
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,500&family=Jost:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --forest: #2f3b2e;
+    --forest-dark: #1c241b;
+    --parchment: #efe8d8;
+    --parchment-light: #f8f3e8;
+    --ink: #2b2620;
+    --ink-soft: #5a5347;
+    --gold: #ad8a45;
+    --gold-line: rgba(173,138,69,0.4);
+  }
+
+  *{ box-sizing: border-box; }
+
+  html{ scroll-behavior: smooth; }
+
+  body{
+    margin:0;
+    background: var(--parchment-light);
+    color: var(--ink);
+    font-family: 'Jost', sans-serif;
+    overflow: hidden; /* released by JS once the envelope opens */
+  }
+
+  body.unlocked{ overflow: auto; }
+
+  .display{ font-family: 'Cormorant Garamond', serif; }
+
+  /* ---------- Envelope stage ---------- */
+
+  .envelope-stage{
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 28px;
+    background: var(--forest);
+    background-image:
+      radial-gradient(circle at 20% 15%, rgba(255,255,255,0.05), transparent 40%),
+      radial-gradient(circle at 85% 90%, rgba(255,255,255,0.04), transparent 45%);
+    transition: opacity 0.9s ease, visibility 0.9s ease;
+  }
+
+  .envelope-stage.hidden{
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  .envelope-wrap{
+    perspective: 1600px;
+  }
+
+  .envelope{
+    position: relative;
+    width: min(78vw, 340px);
+    height: min(52vw, 226px);
+  }
+
+  .env-back{
+    position: absolute;
+    inset: 0;
+    background: var(--forest-dark);
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+
+  .env-pocket-left,
+  .env-pocket-right{
+    position: absolute;
+    inset: 0;
+    background: #263120;
+  }
+  .env-pocket-left{ clip-path: polygon(0 0, 50% 55%, 0 100%); }
+  .env-pocket-right{ clip-path: polygon(100% 0, 50% 55%, 100% 100%); }
+
+  .env-card{
+    position: absolute;
+    left: 6%;
+    right: 6%;
+    top: 10%;
+    height: 82%;
+    background: var(--parchment);
+    box-shadow: 0 10px 26px rgba(0,0,0,0.35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 4; /* always paints above the envelope back, pockets and flap */
+    transition: transform 0.9s cubic-bezier(.6,.05,.25,1) 0.75s;
+  }
+
+  .env-card-mark{
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: clamp(1.1rem, 4vw, 1.4rem);
+    color: var(--forest);
+    letter-spacing: 0.04em;
+  }
+
+  .env-flap{
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 62%;
+    background: var(--forest);
+    clip-path: polygon(0 0, 100% 0, 50% 100%);
+    transform-origin: top center;
+    transform: rotateX(0deg);
+    transition: transform 0.85s cubic-bezier(.6,.05,.25,1);
+    z-index: 3;
+    backface-visibility: hidden;
+    border-bottom: 1px solid rgba(0,0,0,0.15);
+  }
+
+  .envelope.open .env-flap{
+    transform: rotateX(180deg);
+  }
+
+  .envelope.open .env-card{
+    transform: translateY(-78%) scale(1.04);
+  }
+
+  .env-seal{
+    all: unset;
+    position: absolute;
+    top: 40%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 58px;
+    height: 58px;
+    border-radius: 50%;
+    background: var(--gold);
+    color: var(--forest-dark);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1rem;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    z-index: 5;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.35);
+    transition: transform 0.3s ease, opacity 0.5s ease 0.2s;
+  }
+
+  .env-seal:hover{ transform: translate(-50%, -50%) scale(1.06); }
+  .env-seal:focus-visible{ outline: 2px solid var(--parchment-light); outline-offset: 3px; }
+
+  .envelope.open .env-seal{
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .envelope-hint{
+    margin: 0;
+    color: rgba(248,243,232,0.75);
+    font-size: 0.85rem;
+    letter-spacing: 0.06em;
+    text-align: center;
+    transition: opacity 0.4s ease;
+  }
+
+  .envelope-stage.hidden .envelope-hint{ opacity: 0; }
+
+  @media (prefers-reduced-motion: reduce){
+    .env-flap, .env-card, .env-seal, .envelope-stage{ transition-duration: 0.01ms !important; }
+  }
+
+  /* ---------- Main invitation ---------- */
+
+  main{ max-width: 720px; margin: 0 auto; padding: 0 24px; }
+
+  section{ padding: 96px 0; border-bottom: 1px solid var(--gold-line); }
+  section:last-of-type{ border-bottom: none; }
+
+  .hero{
+    padding-top: 108px;
+    text-align: center;
+  }
+
+  .hero .kicker{
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    color: var(--ink-soft);
+    font-size: 1.1rem;
+    margin: 0 0 18px;
+  }
+
+  .hero h1{
+    font-size: clamp(2.6rem, 8vw, 4.4rem);
+    font-weight: 500;
+    line-height: 1.05;
+    margin: 0;
+  }
+
+  .hero .amp{
+    display: inline-block;
+    color: var(--gold);
+    font-style: italic;
+    padding: 0 0.15em;
+  }
+
+  .hero .lede{
+    max-width: 46ch;
+    margin: 26px auto 0;
+    color: var(--ink-soft);
+    line-height: 1.7;
+  }
+
+  h2.section-title{
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 500;
+    font-size: clamp(1.8rem, 4.5vw, 2.4rem);
+    margin: 0 0 8px;
+  }
+
+  .section-sub{
+    color: var(--ink-soft);
+    margin: 0 0 44px;
+    font-size: 0.95rem;
+  }
+
+  /* Save the date */
+  .date-block{ text-align: center; }
+
+  .date-numerals{
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(3.2rem, 12vw, 5.5rem);
+    letter-spacing: 0.08em;
+    margin: 6px 0 10px;
+    color: var(--forest);
+  }
+
+  .date-words{
+    color: var(--ink-soft);
+    letter-spacing: 0.04em;
+  }
+
+  /* Schedule / timeline */
+  .timeline{ list-style: none; margin: 0; padding: 0; }
+
+  .timeline li{
+    display: grid;
+    grid-template-columns: 88px 24px 1fr;
+    gap: 4px 0;
+    align-items: start;
+    padding-bottom: 40px;
+    position: relative;
+  }
+
+  .timeline li:last-child{ padding-bottom: 0; }
+
+  .timeline .dot-col{
+    position: relative;
+    display: flex;
+    justify-content: center;
+  }
+
+  .timeline .dot-col::before{
+    content:"";
+    position: absolute;
+    top: 22px;
+    bottom: -40px;
+    width: 1px;
+    background: var(--gold-line);
+  }
+
+  .timeline li:last-child .dot-col::before{ display: none; }
+
+  .timeline .dot{
+    width: 9px; height: 9px;
+    border-radius: 50%;
+    background: var(--gold);
+    margin-top: 6px;
+  }
+
+  .timeline .time{
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.2rem;
+    color: var(--forest);
+    padding-top: 1px;
+  }
+
+  .timeline .event-name{
+    font-weight: 500;
+    margin: 0 0 4px;
+  }
+
+  .timeline .event-place{
+    color: var(--ink-soft);
+    font-size: 0.92rem;
+    margin: 0;
+  }
+
+  /* Thank you */
+  .thanks{ text-align: center; }
+
+  .thanks blockquote{
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: clamp(1.3rem, 3.5vw, 1.7rem);
+    line-height: 1.6;
+    max-width: 42ch;
+    margin: 0 auto 28px;
+    color: var(--forest);
+  }
+
+  .thanks .signature{
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.3rem;
+    color: var(--ink);
+  }
+
+  footer{
+    text-align: center;
+    padding: 40px 24px 56px;
+    color: var(--ink-soft);
+    font-size: 0.82rem;
+    letter-spacing: 0.03em;
+  }
+
+  @media (max-width: 480px){
+    section{ padding: 72px 0; }
+    .timeline li{ grid-template-columns: 64px 20px 1fr; }
+  }
+</style>
+</head>
+<body>
+
+  <!-- Envelope you tap to open -->
+  <div class="envelope-stage" id="envelopeStage">
+    <div class="envelope-wrap">
+      <div class="envelope" id="envelope">
+        <div class="env-back"></div>
+        <div class="env-pocket-left"></div>
+        <div class="env-pocket-right"></div>
+        <div class="env-card">
+          <span class="env-card-mark" id="envMonogram">A &amp; J</span>
+        </div>
+        <div class="env-flap"></div>
+        <button class="env-seal" id="envSeal" aria-label="Open the invitation">
+          Open
+        </button>
+      </div>
+    </div>
+    <p class="envelope-hint">press the seal to open your invitation</p>
+  </div>
+
+  <!-- The invitation itself -->
+  <main>
+
+    <section class="hero">
+      <p class="kicker" id="kicker">we're getting married</p>
+      <h1 id="coupleNames">Amelia <span class="amp">&amp;</span> James</h1>
+      <p class="lede" id="heroLede">We're so happy to share this next chapter with you, and we'd love for you to save the date.</p>
+    </section>
+
+    <section id="save-the-date">
+      <div class="date-block">
+        <h2 class="section-title">Save the Date</h2>
+        <p class="section-sub" id="dateSub">Formal invitation with all the details to follow</p>
+        <p class="date-numerals" id="dateNumerals">20 · 06 · 2027</p>
+        <p class="date-words" id="dateWords">Sunday, the twentieth of June, two thousand twenty-seven</p>
+      </div>
+    </section>
+
+    <section id="schedule">
+      <h2 class="section-title">Schedule</h2>
+      <p class="section-sub">How the day will unfold</p>
+      <ul class="timeline" id="timelineList">
+        <!-- populated from CONFIG.schedule in the script below -->
+      </ul>
+    </section>
+
+    <section class="thanks" id="thank-you">
+      <h2 class="section-title">Thank You</h2>
+      <blockquote id="thankYouMessage">
+        Thank you for being part of our story so far. We can't wait to celebrate the next chapter with the people we love most.
+      </blockquote>
+      <p class="signature" id="thankYouSignature">Amelia &amp; James</p>
+    </section>
+
+  </main>
+
+  <footer id="footerNote">
+    Questions? Reach us at hello@example.com
+  </footer>
+
+<script>
+  /* ==================================================================
+     EDIT ME — change the wording, date and schedule here, then save.
+     Nothing else in the file needs to change.
+     ================================================================== */
+  const CONFIG = {
+    monogram: "A & J",
+    kicker: "we're getting married",
+    names: "Amelia & James",          // use " & " — it is styled automatically
+    heroLede: "We're so happy to share this next chapter with you, and we'd love for you to save the date.",
+
+    dateSub: "Formal invitation with all the details to follow",
+    dateNumerals: "20 · 06 · 2027",
+    dateWords: "Sunday, the twentieth of June, two thousand twenty-seven",
+
+    schedule: [
+      { time: "3:30 PM", name: "Ceremony",          place: "St. Aldric's Chapel, 12 Willow Lane" },
+      { time: "5:00 PM", name: "Cocktail Hour",      place: "The Garden Terrace" },
+      { time: "7:00 PM", name: "Reception & Dinner", place: "Willowbrook Hall" }
+    ],
+
+    thankYouMessage: "Thank you for being part of our story so far. We can't wait to celebrate the next chapter with the people we love most.",
+    thankYouSignature: "Amelia & James",
+
+    footerNote: "Questions? Reach us at hello@example.com"
+  };
+  /* =============================== end of edits =================== */
+
+  function styleNames(text){
+    return text.replace(/\s*&\s*/, ' <span class="amp">&amp;</span> ');
+  }
+
+  document.getElementById('envMonogram').textContent = CONFIG.monogram;
+  document.getElementById('kicker').textContent = CONFIG.kicker;
+  document.getElementById('coupleNames').innerHTML = styleNames(CONFIG.names);
+  document.getElementById('heroLede').textContent = CONFIG.heroLede;
+
+  document.getElementById('dateSub').textContent = CONFIG.dateSub;
+  document.getElementById('dateNumerals').textContent = CONFIG.dateNumerals;
+  document.getElementById('dateWords').textContent = CONFIG.dateWords;
+
+  const list = document.getElementById('timelineList');
+  CONFIG.schedule.forEach(item => {
+    const li = document.createElement('li');
+    li.innerHTML = `
+      <span class="time">${item.time}</span>
+      <span class="dot-col"><span class="dot"></span></span>
+      <span>
+        <p class="event-name">${item.name}</p>
+        <p class="event-place">${item.place}</p>
+      </span>`;
+    list.appendChild(li);
+  });
+
+  document.getElementById('thankYouMessage').textContent = CONFIG.thankYouMessage;
+  document.getElementById('thankYouSignature').innerHTML = styleNames(CONFIG.thankYouSignature);
+  document.getElementById('footerNote').textContent = CONFIG.footerNote;
+  document.title = CONFIG.names.replace(' & ', ' & ') + ' — Save the Date';
+
+  /* ---------- Envelope open interaction ---------- */
+  const envelope = document.getElementById('envelope');
+  const seal = document.getElementById('envSeal');
+  const stage = document.getElementById('envelopeStage');
+  let opened = false;
+
+  function openEnvelope(){
+    if (opened) return;
+    opened = true;
+    envelope.classList.add('open');
+    seal.disabled = true;
+
+    // give the flap + card animation time to play, then reveal the page
+    setTimeout(() => {
+      stage.classList.add('hidden');
+      document.body.classList.add('unlocked');
+    }, 1650);
+  }
+
+  seal.addEventListener('click', openEnvelope);
+  seal.addEventListener('keyup', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') openEnvelope();
+  });
+</script>
+
+</body>
+</html>
