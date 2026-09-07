@@ -105,10 +105,11 @@
     top: 10%;
     height: 82%;
     background: var(--parchment);
-    box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+    box-shadow: 0 10px 26px rgba(0,0,0,0.35);
     display: flex;
     align-items: center;
     justify-content: center;
+    z-index: 4; /* always paints above the envelope back, pockets and flap */
     transition: transform 0.9s cubic-bezier(.6,.05,.25,1) 0.75s;
   }
 
@@ -130,6 +131,7 @@
     transform: rotateX(0deg);
     transition: transform 0.85s cubic-bezier(.6,.05,.25,1);
     z-index: 3;
+    backface-visibility: hidden;
     border-bottom: 1px solid rgba(0,0,0,0.15);
   }
 
@@ -138,7 +140,7 @@
   }
 
   .envelope.open .env-card{
-    transform: translateY(-58%);
+    transform: translateY(-78%) scale(1.04);
   }
 
   .env-seal{
